@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Employee Management System</title>
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:Arial,sans-serif;
+        }
+
+        body{
+            background:#f4f6f9;
+            padding:40px;
+        }
+
+        .container{
+            max-width:1100px;
+            margin:auto;
+        }
+
+        h1{
+            text-align:center;
+            margin-bottom:20px;
+            color:#333;
+        }
+
+        .dashboard{
+            display:flex;
+            gap:20px;
+            margin-bottom:20px;
+        }
+
+        .card{
+            flex:1;
+            background:white;
+            padding:20px;
+            border-radius:12px;
+            box-shadow:0px 4px 10px rgba(0,0,0,0.1);
+            text-align:center;
+        }
+
+        .form-card{
+            background:white;
+            padding:20px;
+            border-radius:12px;
+            box-shadow:0px 4px 10px rgba(0,0,0,0.1);
+            margin-bottom:20px;
+        }
+
+        input{
+            width:100%;
+            padding:12px;
+            margin:10px 0;
+            border:1px solid #ccc;
+            border-radius:8px;
+        }
+
+        button{
+            padding:10px 15px;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+            color:white;
+            margin-right:5px;
+        }
+
+        .save-btn{
+            background:#28a745;
+        }
+
+        .refresh-btn{
+            background:#007bff;
+        }
+
+        .search-btn{
+            background:#6f42c1;
+        }
+
+        .edit-btn{
+            background:#ffc107;
+            color:black;
+        }
+
+        .delete-btn{
+            background:#dc3545;
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+            background:white;
+            box-shadow:0px 4px 10px rgba(0,0,0,0.1);
+            border-radius:12px;
+            overflow:hidden;
+        }
+
+        th{
+            background:#007bff;
+            color:white;
+            padding:15px;
+        }
+
+        td{
+            padding:12px;
+            text-align:center;
+            border-bottom:1px solid #ddd;
+        }
+
+        tr:hover{
+            background:#f5f5f5;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Employee Management System</h1>
+
+    <div class="dashboard">
+
+        <div class="card">
+            <h3>Total Employees</h3>
+            <h2 id="totalEmployees">0</h2>
+        </div>
+
+    </div>
+
+    <div class="form-card">
+
+        <input
+            type="hidden"
+            id="employeeId">
+
+        <input
+            type="text"
+            id="name"
+            placeholder="Employee Name">
+
+        <input
+            type="text"
+            id="department"
+            placeholder="Department">
+
+        <input
+            type="number"
+            id="salary"
+            placeholder="Salary">
+
+        <button
+            class="save-btn"
+            onclick="saveEmployee()">
+
+            Save Employee
+
+        </button>
+
+        <button
+            class="refresh-btn"
+            onclick="loadEmployees()">
+
+            Refresh
+
+        </button>
+
+    </div>
+
+    <div class="form-card">
+
+        <input
+            type="text"
+            id="searchDepartment"
+            placeholder="Search Department">
+
+        <button
+            class="search-btn"
+            onclick="searchEmployee()">
+
+            Search
+
+        </button>
+
+    </div>
+
+    <table>
+
+        <thead>
+
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Department</th>
+            <th>Salary</th>
+            <th>Actions</th>
+        </tr>
+
+        </thead>
+
+        <tbody id="employees">
+
+        </tbody>
+
+    </table>
+
+</div>
+
+<script>
+
+async function saveEmployee(){
+
+    const id =
+        document.getElementById(
+            "employeeId"
+        ).value;
+
+    const name =
+        document.getElementById(
+            "name"
+        ).value;
+
+    const department =
+        document.getElementById(
+            "department"
+        ).value;
+
+    const salary =
+        parseInt(
+            document.getElementById(
+                "salary"
+            ).value
+        );
+
+    if(id){
+
+        await fetch(
+            `http://127.0.0.1:8000/employees/${id}`,
+            {
+                method:"PUT",
+                headers:{
+                    "Content-Type":"application/json"
+                },
+                body:JSON.stringify({
+                    name:name,
+                    department:department,
+                    salary:salary
+                })
+            }
+        );
+
+        alert("Employee Updated");
+
+    }else{
+
+        await fetch(
+            "http://127.0.0.1:8000/employees",
+            {
+                method:"POST",
+                headers:{
+                    "Content-Type":"application/json"
+                },
+                body:JSON.stringify({
+                    name:name,
+                    department:department,
+                    salary:salary
+                })
+            }
+        );
+
+        alert("Employee Added");
+    }
+
+    clearForm();
+
+    loadEmployees();
+}
+
+async function loadEmployees(){
+
+    const response =
+        await fetch(
+            "http://127.0.0.1:8000/employees"
+        );
+
+    const employees =
+        await response.json();
+
+    document.getElementById(
+        "totalEmployees"
+    ).innerText = employees.length;
+
+    let output = "";
+
+    employees.forEach(employee => {
+
+        output += `
+        <tr>
+
+            <td>${employee.id}</td>
+
+            <td>${employee.name}</td>
+
+            <td>${employee.department}</td>
+
+            <td>₹${employee.salary}</td>
+
+            <td>
+
+                <button
+                class="edit-btn"
+                onclick="editEmployee(
+                    ${employee.id},
+                    '${employee.name}',
+                    '${employee.department}',
+                    ${employee.salary}
+                )">
+
+                Edit
+
+                </button>
+
+                <button
+                class="delete-btn"
+                onclick="deleteEmployee(${employee.id})">
+
+                Delete
+
+                </button>
+
+            </td>
+
+        </tr>
+        `;
+    });
+
+    document.getElementById(
+        "employees"
+    ).innerHTML = output;
+}
+
+async function deleteEmployee(id){
+
+    await fetch(
+        `http://127.0.0.1:8000/employees/${id}`,
+        {
+            method:"DELETE"
+        }
+    );
+
+    alert("Employee Deleted");
+
+    loadEmployees();
+}
+
+function editEmployee(
+    id,
+    name,
+    department,
+    salary
+){
+
+    document.getElementById(
+        "employeeId"
+    ).value = id;
+
+    document.getElementById(
+        "name"
+    ).value = name;
+
+    document.getElementById(
+        "department"
+    ).value = department;
+
+    document.getElementById(
+        "salary"
+    ).value = salary;
+}
+
+function clearForm(){
+
+    document.getElementById(
+        "employeeId"
+    ).value = "";
+
+    document.getElementById(
+        "name"
+    ).value = "";
+
+    document.getElementById(
+        "department"
+    ).value = "";
+
+    document.getElementById(
+        "salary"
+    ).value = "";
+}
+
+async function searchEmployee(){
+
+    const department =
+        document.getElementById(
+            "searchDepartment"
+        ).value;
+
+    const response =
+        await fetch(
+            `http://127.0.0.1:8000/search?department=${department}`
+        );
+
+    const employees =
+        await response.json();
+
+    let output = "";
+
+    employees.forEach(employee => {
+
+        output += `
+        <tr>
+
+            <td>${employee.id}</td>
+
+            <td>${employee.name}</td>
+
+            <td>${employee.department}</td>
+
+            <td>₹${employee.salary}</td>
+
+            <td>
+
+                <button
+                class="edit-btn"
+                onclick="editEmployee(
+                    ${employee.id},
+                    '${employee.name}',
+                    '${employee.department}',
+                    ${employee.salary}
+                )">
+
+                Edit
+
+                </button>
+
+                <button
+                class="delete-btn"
+                onclick="deleteEmployee(${employee.id})">
+
+                Delete
+
+                </button>
+
+            </td>
+
+        </tr>
+        `;
+    });
+
+    document.getElementById(
+        "employees"
+    ).innerHTML = output;
+}
+
+loadEmployees();
+
+</script>
+
+</body>
+</html>

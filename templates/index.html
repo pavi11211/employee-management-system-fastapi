@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Employee Management</title>
+</head>
+<body>
+
+<h1>Employee Management System</h1>
+
+<input type="text" id="name" placeholder="Name">
+
+<input type="text" id="department" placeholder="Department">
+
+<input type="number" id="salary" placeholder="Salary">
+
+<button onclick="addEmployee()">
+Add Employee
+</button>
+
+<hr>
+
+<button onclick="loadEmployees()">
+Load Employees
+</button>
+
+<div id="employees"></div>
+
+<script>
+
+async function addEmployee(){
+
+    let name =
+        document.getElementById("name").value;
+
+    let department =
+        document.getElementById("department").value;
+
+    let salary =
+        parseInt(
+            document.getElementById("salary").value
+        );
+
+    let response =
+        await fetch("/employees",{
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json"
+            },
+            body:JSON.stringify({
+                name:name,
+                department:department,
+                salary:salary
+            })
+        });
+
+    let data =
+        await response.json();
+
+    alert("Employee Added");
+
+    loadEmployees();
+}
+
+async function loadEmployees(){
+
+    let response =
+        await fetch("/employees");
+
+    let employees =
+        await response.json();
+
+    let output = "";
+
+    employees.forEach(employee => {
+
+        output += `
+            <p>
+                ${employee.id}
+                -
+                ${employee.name}
+                -
+                ${employee.department}
+                -
+                ₹${employee.salary}
+            </p>
+        `;
+    });
+
+    document.getElementById(
+        "employees"
+    ).innerHTML = output;
+}
+
+</script>
+
+</body>
+</html>
